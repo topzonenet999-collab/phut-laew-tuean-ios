@@ -53,16 +53,17 @@ jobs:
           xcodebuild \
             -project PhutLaewTuean.xcodeproj \
             -scheme PhutLaewTuean \
-            -configuration Debug \
+            -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             -derivedDataPath "$GITHUB_WORKSPACE/build/device" \
+            ENABLE_DEBUG_DYLIB=NO \
             CODE_SIGNING_ALLOWED=NO \
             build
       - name: Validate permission descriptions and package unsigned IPA
         shell: bash
         run: |
-          app_path="$GITHUB_WORKSPACE/build/device/Build/Products/Debug-iphoneos/PhutLaewTuean.app"
+          app_path="$GITHUB_WORKSPACE/build/device/Build/Products/Release-iphoneos/PhutLaewTuean.app"
           test -d "$app_path"
           for key in NSAlarmKitUsageDescription NSMicrophoneUsageDescription NSSpeechRecognitionUsageDescription; do
             description=$(/usr/libexec/PlistBuddy -c "Print :$key" "$app_path/Info.plist")

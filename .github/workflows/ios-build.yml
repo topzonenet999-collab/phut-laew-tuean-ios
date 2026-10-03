@@ -1,0 +1,42 @@
+name: Build iOS app
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: true
+
+jobs:
+  simulator-build:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Locate source project
+        id: project
+        shell: bash
+        run: |
+          if [[ -f ios-source.zip ]]; then
+            mkdir -p app
+            unzip -q ios-source.zip -d app
+            echo "path=app" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=." >> "$GITHUB_OUTPUT"
+          fi
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: Compile for iOS Simulator (no signing)
+        working-directory: ${{ steps.project.outputs.path }}
+        run: |
+          xcodebuild \
+            -project PhutLaewTuean.xcodeproj \
+            -scheme PhutLaewTuean \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build

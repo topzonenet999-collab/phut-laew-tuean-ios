@@ -38,7 +38,7 @@ jobs:
       - name: Check Thai speech date and time parsing
         working-directory: ${{ steps.project.outputs.path }}
         run: |
-          cat PhutLaewTuean/App/ThaiReminderParser.swift Tests/ParserChecks.swift > "$RUNNER_TEMP/parser-checks.swift"
+          cat PhutLaewTuean/App/Reminder.swift PhutLaewTuean/App/ThaiReminderParser.swift Tests/ParserChecks.swift > "$RUNNER_TEMP/parser-checks.swift"
           swift "$RUNNER_TEMP/parser-checks.swift"
       - name: Compile for iOS Simulator (no signing)
         working-directory: ${{ steps.project.outputs.path }}

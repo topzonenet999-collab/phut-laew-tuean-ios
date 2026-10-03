@@ -15,7 +15,7 @@
 
 ## เปิดและทดสอบบน iPhone 11
 
-ต้องมี **Mac ที่ติดตั้ง Xcode พร้อม iOS 26 SDK**, iPhone 11 ที่อัปเดตเป็น iOS 26 และ Apple ID สำหรับ signing:
+วิธีใช้ Xcode โดยตรงต้องมี **Mac ที่ติดตั้ง Xcode พร้อม iOS 26 SDK**, iPhone 11 ที่อัปเดตเป็น iOS 26 และ Apple Account สำหรับ signing ถ้าใช้ Windows ให้ใช้วิธีในหัวข้อถัดไป:
 
 1. เปิด `PhutLaewTuean.xcodeproj` ด้วย Xcode
 2. ไปที่ target `PhutLaewTuean` → **Signing & Capabilities** → เลือก Team ของคุณ หาก Bundle Identifier ซ้ำกับผู้อื่น ให้เปลี่ยนเป็นชื่อที่ไม่ซ้ำ
@@ -28,15 +28,19 @@
 
 ## ถ้าไม่มี Mac
 
-ใช้คอม Windows จัดการโค้ดและอัปโหลดโฟลเดอร์ `thai-reminder-ios` เป็น **รากของ GitHub repository** ได้ ไฟล์ `.github/workflows/ios-build.yml` จะสั่ง GitHub Actions ให้คอมไพล์บนเครื่อง macOS ของ GitHub โดยกด **Actions → Build iOS app → Run workflow** การคอมไพล์นี้ไม่ลงลายเซ็น จึงใช้ตรวจ error ของโค้ดได้ แต่ยังไม่ใช่แอปสำหรับติดตั้งบน iPhone และไม่ได้ยืนยันเสียงปลุกจริง
+ใช้คอม Windows กับโปรเจกต์ [phut-laew-tuean-ios](https://github.com/topzonenet999-collab/phut-laew-tuean-ios) ซึ่งเจ้าของอนุมัติให้เป็น **Public** แล้ว โค้ดอยู่ใน `ios-source.zip` ให้แตกไฟล์เพื่อเปิดโปรเจกต์ ส่วน workflow หลักอยู่ที่ `.github/workflows/ios-build.yml` กด **Actions → Build iOS app → Run workflow** เพื่อสร้างด้วย Xcode บนเครื่อง macOS ของ GitHub โดยไม่ต้องซื้อ Mac
 
-GitHub Actions มีโควตาฟรีสำหรับ repository ส่วนตัวและใช้งาน standard runner ฟรีใน repository สาธารณะตามเงื่อนไขของ GitHub ตรวจโควตาก่อนเปิดใช้งานเพื่อไม่ให้เกิดค่าใช้จ่าย ส่วนการเผยแพร่แอปบน App Store ต้องสมัคร Apple Developer Program; การทดสอบบนเครื่องของตนด้วย Xcode ใช้ Apple Account ได้โดยไม่ต้องสมัครสมาชิกแบบจ่ายเงิน
+งานนี้ใช้ **standard runner ใน Public repository ซึ่ง GitHub ระบุว่าฟรีไม่จำกัดนาทีรายเดือน** จึงไม่ใช้โควตา Private 2,000 นาที งานจะไม่เริ่ม runner ถ้า repository เปลี่ยนกลับเป็น Private ยังคงมีข้อจำกัดต่อหนึ่งงานและการทำงานพร้อมกันตามนโยบาย GitHub
+
+workflow คอมไพล์ทั้ง Simulator และ iPhone ตรวจคำอธิบายสิทธิ์ และเก็บ `PhutLaewTuean-unsigned.ipa` พร้อม SHA-256 ใน **Draft Release** ไม่ใช้ Actions artifact storage หรือ build cache ไฟล์ IPA ยังไม่ได้ลงลายเซ็น จึงแตะติดตั้งจาก iPhone โดยตรงไม่ได้
+
+ขั้นทดสอบส่วนตัวแบบฟรีใช้ **AltServer บน Windows** เพื่อลงลายเซ็นด้วย Apple Account แล้วติดตั้งผ่าน USB ดู [คู่มือติดตั้งด้วย Windows](WINDOWS_FREE_INSTALL.md) การลงลายเซ็นฟรีหมดอายุทุก **7 วัน** ต้องติดตั้งซ้ำหรือต่ออายุ และยังไม่ได้ทดสอบเสียงจริงบน iPhone ส่วนการขายผ่าน App Store ต้องสมัคร Apple Developer Program ซึ่งมีค่าใช้จ่ายและยังไม่ได้เปิดใช้
 
 ## ขอบเขตรุ่นนี้
 
 - ปลุกเป็นเสียงมาตรฐานของระบบ พร้อมชื่อรายการบนหน้าปลุก ยังไม่ได้อ่านชื่อรายการเป็นเสียงพูดอัตโนมัติเมื่อแอปปิด
 - รูปแบบและระยะเวลาที่เสียงดังอยู่ภายใต้การควบคุมของ iOS ควรตรวจบน iPhone จริงก่อนขาย
 - ยังไม่มีปุ่มเลื่อนปลุก การซิงก์ข้อมูลระหว่างเครื่อง การนำเข้ารายการจากเว็บ หรือระบบขายผ่าน App Store
-- คอม Windows ในสภาพแวดล้อมนี้สร้างไฟล์โปรเจกต์ได้ แต่รัน Xcode และติดตั้งแอป iOS โดยตรงไม่ได้ จึงต้อง build และทดสอบบน Mac/iPhone ก่อนแจกจ่าย
+- ยังไม่ได้ติดตั้ง AltServer บนคอม หรือติดตั้งแอปนี้บน iPhone และยังไม่ได้ทดสอบการลงลายเซ็นฟรีร่วมกับ AlarmKit
 
 อ้างอิง: [Apple AlarmKit](https://developer.apple.com/documentation/alarmkit), [ตัวอย่างการตั้งปลุกของ Apple](https://developer.apple.com/documentation/AlarmKit/scheduling-an-alarm-with-alarmkit), [อุปกรณ์ที่รองรับ iOS 26](https://support.apple.com/en-us/123705).

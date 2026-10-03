@@ -12,13 +12,16 @@ concurrency:
 
 jobs:
   simulator-build:
+    name: Build simulator and unsigned iPhone package
     # Never allocate a hosted runner while this repository is private.
     # Public repositories use GitHub's free standard runner policy.
     if: ${{ github.event.repository.private == false }}
     runs-on: macos-26
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Locate source project
         id: project
         shell: bash
@@ -41,5 +44,45 @@ jobs:
             -configuration Debug \
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$GITHUB_WORKSPACE/build/simulator" \
             CODE_SIGNING_ALLOWED=NO \
             build
+      - name: Compile for iPhone (no signing)
+        working-directory: ${{ steps.project.outputs.path }}
+        run: |
+          xcodebuild \
+            -project PhutLaewTuean.xcodeproj \
+            -scheme PhutLaewTuean \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$GITHUB_WORKSPACE/build/device" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      - name: Validate permission descriptions and package unsigned IPA
+        shell: bash
+        run: |
+          app_path="$GITHUB_WORKSPACE/build/device/Build/Products/Debug-iphoneos/PhutLaewTuean.app"
+          test -d "$app_path"
+          for key in NSAlarmKitUsageDescription NSMicrophoneUsageDescription NSSpeechRecognitionUsageDescription; do
+            description=$(/usr/libexec/PlistBuddy -c "Print :$key" "$app_path/Info.plist")
+            test -n "$description"
+            echo "Verified permission description: $key"
+          done
+          mkdir -p package/Payload
+          ditto "$app_path" package/Payload/PhutLaewTuean.app
+          (cd package && zip -qry ../build/PhutLaewTuean-unsigned.ipa Payload)
+          (cd build && shasum -a 256 PhutLaewTuean-unsigned.ipa > PhutLaewTuean-unsigned.ipa.sha256)
+      - name: Save personal test package as a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="ios-test-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          gh release create "$tag" \
+            build/PhutLaewTuean-unsigned.ipa \
+            build/PhutLaewTuean-unsigned.ipa.sha256 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --draft \
+            --title "Unsigned iPhone test build ${GITHUB_RUN_NUMBER}" \
+            --notes "Unsigned personal test package for iOS 26 or later. It requires signing before installation. Free Apple Account installations expire after seven days and require refresh. Alarm behavior has not been tested on a real iPhone. This draft is not an App Store release."
